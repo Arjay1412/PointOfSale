@@ -18,7 +18,7 @@ else:
     print("Connection failed")
 cursor = db.cursor()
 
-
+# Customer Table
 def create_costumer_staff(num):
     tables = ["costumer", "staff"]
     for table in tables:
@@ -32,6 +32,7 @@ def create_costumer_staff(num):
         print(f"{table} records inserted successfully!")
     db.commit()
 
+# Products Table
 def create_products():
     product_list = [
                     "Bottled Water (1L)","Coffee (100g)","Cooking Oil (1L)",
@@ -57,6 +58,7 @@ def create_products():
     print(f"product records inserted successfully!")
     db.commit()
 
+# Payments Table
 def create_payments(num):
     payment_list = ["Cash","Card","Online"]
     for i in range(num):
@@ -66,6 +68,7 @@ def create_payments(num):
     print(f"payment records inserted successfully!")
     db.commit()
     
+# Transaction Table
 def create_transactions():
 
     start_date = datetime(2020, 1, 1)  # Start date
@@ -74,18 +77,14 @@ def create_transactions():
     # Convert dates to timestamps
     start_timestamp = start_date.timestamp()
     end_timestamp = end_date.timestamp()
-
-    # Generate a random timestamp
-    random_timestamp = random.uniform(start_timestamp, end_timestamp)
-
-    # Convert the random timestamp to a datetime object
-    random_date = datetime.fromtimestamp(random_timestamp)
-    payment_id = 103 
+    
     for i in range(30):
+        random_timestamp = random.uniform(start_timestamp, end_timestamp)   # Generate a random timestamp
+        random_date = datetime.fromtimestamp(random_timestamp)              # Convert the random timestamp to a datetime object
         transac_datetime = random_date.strftime('%Y-%m-%d %H:%M:%S')
         quantity = faker.random_int(0,100)
         query = f"INSERT INTO transaction (staff_id, costumer_id,product_id,payment_id,transaction_datetime,product_quantity) VALUES ( %s , %s , %s, %s , %s , %s )"
-        values = (i+1,i+1,i+1,payment_id+1,transac_datetime,quantity)
+        values = (i+1,i+1,i+1,i+1,transac_datetime,quantity)
         cursor.execute(query,values)
     print(f"transaction records inserted successfully!")
     db.commit()
