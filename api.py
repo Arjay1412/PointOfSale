@@ -1,4 +1,4 @@
-from flask import Flask, make_response, jsonify
+from flask import Flask, make_response, jsonify, render_template
 from flask_mysqldb import MySQL
 
 
@@ -20,10 +20,10 @@ mysql = MySQL(app)
 def hello_world():
     return "<p>Hello, World!</p>"
 
-@app.route("/stafflist", methods=["GET"])
-def get_stafs():
+@app.route("/productlist", methods=["GET"])
+def get_products():
     cur = mysql.connection.cursor()
-    query = """SELECT * FROM posdb.staff"""
+    query = """SELECT * FROM posdb.product"""
     cur.execute(query)
 
     data = cur.fetchall()
@@ -41,6 +41,16 @@ def get_transaction():
     cur.close()
 
     return make_response(jsonify(data), 200)
+
+@app.errorhandler(404)
+def page_not_found(e):
+    data ={"error": "Page Not Found"}
+    return make_response(jsonify(data), 404)
+
+@app.errorhandler(500)
+def page_not_found(e):
+    data ={"error": "Interal Server Error"}
+    return make_response(jsonify(data), 500)
 
 if __name__ == "__main__":
     app.run(debug=True)
