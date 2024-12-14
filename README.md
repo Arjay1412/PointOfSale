@@ -17,22 +17,25 @@ Set up the database:
 1. Create a MySQL database called POSdb.
 2. Update the database details in the Flask app.
 
+In MySQL terminal in pythonanywhere execute this command
+`mysql> source myenv/MyFile/POSdb.sql`
+
 Set these directly in the code:
-`app.config["MYSQL_HOST"] = "localhost"`
-`app.config["MYSQL_USER"] = "root"`
+`app.config["MYSQL_HOST"] = "YourPOS.mysql.pythonanywhere-services.com"`
+`app.config["MYSQL_USER"] = "YourPOS"`
 `app.config["MYSQL_PASSWORD"] = "admin"`
-`app.config["MYSQL_DB"] = "posdb"`
+`app.config["MYSQL_DB"] = "YourPOS$default"`
 
 ## API Endpoints
 
-| Endpoint              | Method | Description              |
-| --------------------- | ------ | ------------------------ |
-| /transactions         | GET    | List of all transactions |
-| /products             | GET    | List of all products     |
-| /product/add          | POST   | Create a new product     |
-| /products/update/<id> | PUT    | Update a product by ID   |
-| /products/delete/<id> | DELETE | Delete a product by ID   |
-| /order                | POST   | Create a new order       |
+| Endpoint                    | Method | Description              |
+| --------------------------- | ------ | ------------------------ |
+| /transactions               | GET    | List of all transactions |
+| /products                   | GET    | List of all products     |
+| /product/add                | POST   | Create a new product     |
+| /products/update/&lt;id&gt; | PUT    | Update a product by ID   |
+| /products/delete/&lt;id&gt; | DELETE | Delete a product by ID   |
+| /order                      | POST   | Create a new order       |
 
 ## Testing
 
