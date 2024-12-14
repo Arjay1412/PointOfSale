@@ -23,46 +23,63 @@ def hello_world():
 
 @app.route("/productlist", methods=["GET"])
 def get_products():
-    cur = mysql.connection.cursor()
-    query = """SELECT * FROM posdb.product"""
-    cur.execute(query)
+    try:
+        cur = mysql.connection.cursor()
+        query = """SELECT * FROM posdb.product"""
+        cur.execute(query)
+        rows_affected = cur.rowcount
+        if rows_affected == 0:
+            return make_response(jsonify(
+                {"error": "Product not Found"}),404)
+        
+        data = cur.fetchall()
+        cur.close()
 
-    data = cur.fetchall()
-    cur.close()
+        return make_response(jsonify(data), 200)
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
 
-    return make_response(jsonify(data), 200)
 
 @app.route("/transactionlist", methods=["GET"])
 def get_transaction():
     cur = mysql.connection.cursor()
     query = """SELECT * FROM posdb.transaction"""
     cur.execute(query)
-
+    rows_affected = cur.rowcount
+    if rows_affected == 0:
+            return make_response(jsonify(
+                {"error": "Transactions not Found"}),404)
     data = cur.fetchall()
     cur.close()
 
     return make_response(jsonify(data), 200)
 
-@app.route("/product/<int:id>", methods=["PUT"])
+@app.route("/product/edit/<int:id>", methods=["PUT"])
 def update_product(id):
     cur = mysql.connection.cursor()
     info = request.get_json()
     price = info["price"]
     quantity = info["quantity"]
-    
-    query = """ UPDATE product SET price = %s, quantity = %s WHERE product_id = %s """
-    values = (price, quantity, id)
-    cur.execute(query,values)
-    mysql.connection.commit()
-    rows_affected = cur.rowcount
-    cur.close()
-    return make_response(
-        jsonify(
-            {"message": "Product updated successfully",
-            "rows_affected": rows_affected}
-        ),
-        200,
-    )
+    try:
+        query = """ UPDATE product SET price = %s, quantity = %s WHERE product_id = %s """
+        values = (price, quantity, id)
+        cur.execute(query,values)
+        mysql.connection.commit()
+        rows_affected = cur.rowcount
+        cur.close()
+        if rows_affected == 0:
+            return make_response(jsonify(
+                {"error": "Product not Found"}),404)
+        
+        return make_response(
+            jsonify(
+                {"message": "Product updated successfully",
+                "rows_affected": rows_affected}
+            ),200,
+        )
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
+
 
 @app.route("/order", methods=["POST"])
 def add_payment_transaction():
@@ -103,16 +120,38 @@ def add_payment_transaction():
             jsonify(
                 {"message1": "Order added successfully", "rows_affected1": rows_affected_payment,
                 "message2": "Transaction added successfully", "rows_affected2": rows_affected_transaction}
-            ),
-            201,
+            ),201,
         )
     except Exception as e:
-        return make_response(jsonify(
-                                {"error": str(e)}
-                                ), 500)
+        return make_response(jsonify({"error": str(e)}), 500)
 
+@app.route("/product/add", methods=["POST"])
+def add_product():
+    info = request.get_json()
+    cur = mysql.connection.cursor()
+    prod_name = info["product_name"]
+    price = info["price"]
+    quantity = info["quantity"]
+    try:
+        payment_query = """INSERT INTO product (product_name,price, quantity) VALUES (%s, %s, %s)"""
+        payment_values = (prod_name, price, quantity)
+        cur.execute(payment_query, payment_values)
+        mysql.connection.commit()
+        rows_affected = cur.rowcount
+        cur.close()
+        if rows_affected == 0:
+            return make_response(
+                jsonify(
+                    {"error": "Product couldn't add"}),404)
+        return make_response(
+            jsonify(
+                {"message": "Product added successfully", 
+                 "rows_affected": rows_affected}),
+                200,)
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
 
-@app.route("/product/<int:id>", methods=["DELETE"])
+@app.route("/product/delete/<int:id>", methods=["DELETE"])
 def delete_product(id):
     try:
         cur = mysql.connection.cursor()
@@ -123,17 +162,16 @@ def delete_product(id):
         if rows_affected == 0:
             return make_response(
             jsonify(
-                {"error": "Product not Found"}),200,)
+                {"error": "Product not Found"}),404)
 
         return make_response(
             jsonify(
-                {"message": "Product deleted successfully", "rows_affected": rows_affected}
+                {"message": "Product deleted successfully", 
+                 "rows_affected": rows_affected}
             ),
             200,)
     except Exception as e:
-        return make_response(jsonify(
-                                {"error": str(e)}
-                                ), 500)
+        return make_response(jsonify({"error": str(e)}), 500)
 
 @app.errorhandler(404)
 def page_not_found(e):
