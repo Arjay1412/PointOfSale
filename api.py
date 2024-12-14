@@ -65,7 +65,7 @@ def update_product(id):
     )
 @app.route("/order", methods=["POST"])
 def add_payment_transaction():
-    cur = mysql.connection.cursor()
+    
     info = request.get_json()
 
     method = info["method"]
@@ -74,31 +74,51 @@ def add_payment_transaction():
     staff_id = info["staff_id"]
     customer_id = info["costumer_id"]
     prod_id = info["product_id"]
-    payment_id = info["payment_id"]
-    quantity = info["quantity"]
+    quantity = info["product_quantity"]
 
-    payment_query = """ INSERT INTO payment (method, amount) VALUE (%s, %s) """
+    cur = mysql.connection.cursor()
+    # Create payment
+    payment_query = """INSERT INTO payment (method, amount) VALUES (%s, %s)"""
     payment_values = (method, amount)
-    cur.execute(payment_query,payment_values)
-    mysql.connection.commit()
+    cur.execute(payment_query, payment_values)
     rows_affected_payment = cur.rowcount
 
-    transac_query = """ INSERT INTO transaction (staff_id, costumer_id,product_id,payment_id,transaction_datetime,quantity) VALUE (%s, %s, %s, %s,) """
-    transac_values = (staff_id, customer_id,prod_id,payment_id, datetime.now(),quantity)
-    cur.execute(transac_query,transac_values)
-    mysql.connection.commit()
+    # Get last inserted payment_id
+    payment_id = cur.lastrowid
 
-    print("row(s) affected :{}".format(cur.rowcount))
+    # Create transaction
+    transaction_query = """
+        INSERT INTO transaction (staff_id, costumer_id, product_id, payment_id, transaction_datetime, product_quantity) 
+        VALUES (%s, %s, %s, %s, %s, %s)
+    """
+    transaction_values = (staff_id, customer_id, prod_id, payment_id, datetime.now(), quantity)
+    cur.execute(transaction_query, transaction_values)
     rows_affected_transaction = cur.rowcount
+
+    mysql.connection.commit()
     cur.close()
+
     return make_response(
         jsonify(
-            {"message": "Order added successfully", "rows_affected": rows_affected_payment,
-             "message": "Transaction added successfully", "rows_affected": rows_affected_transaction}
+            {"message1": "Order added successfully", "rows_affected1": rows_affected_payment,
+             "message2": "Transaction added successfully", "rows_affected2": rows_affected_transaction}
         ),
         201,
     )
 
+@app.route("/product/<int:id>", methods=["DELETE"])
+def delete_actor(id):
+    cur = mysql.connection.cursor()
+    cur.execute(""" DELETE FROM product where product_id = %s """, (id,))
+    mysql.connection.commit()
+    rows_affected = cur.rowcount
+    cur.close()
+    return make_response(
+        jsonify(
+            {"message": "Product deleted successfully", "rows_affected": rows_affected}
+        ),
+        200,
+    )
 
 @app.errorhandler(404)
 def page_not_found(e):
