@@ -1,6 +1,6 @@
 from flask import Flask, make_response, jsonify, request
 from flask_mysqldb import MySQL
-
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -63,6 +63,42 @@ def update_product(id):
         ),
         200,
     )
+@app.route("/order", methods=["POST"])
+def add_payment_transaction():
+    cur = mysql.connection.cursor()
+    info = request.get_json()
+
+    method = info["method"]
+    amount = info["amount"]
+
+    staff_id = info["staff_id"]
+    customer_id = info["costumer_id"]
+    prod_id = info["product_id"]
+    payment_id = info["payment_id"]
+    quantity = info["quantity"]
+
+    payment_query = """ INSERT INTO payment (method, amount) VALUE (%s, %s) """
+    payment_values = (method, amount)
+    cur.execute(payment_query,payment_values)
+    mysql.connection.commit()
+    rows_affected_payment = cur.rowcount
+
+    transac_query = """ INSERT INTO transaction (staff_id, costumer_id,product_id,payment_id,transaction_datetime,quantity) VALUE (%s, %s, %s, %s,) """
+    transac_values = (staff_id, customer_id,prod_id,payment_id, datetime.now(),quantity)
+    cur.execute(transac_query,transac_values)
+    mysql.connection.commit()
+
+    print("row(s) affected :{}".format(cur.rowcount))
+    rows_affected_transaction = cur.rowcount
+    cur.close()
+    return make_response(
+        jsonify(
+            {"message": "Order added successfully", "rows_affected": rows_affected_payment,
+             "message": "Transaction added successfully", "rows_affected": rows_affected_transaction}
+        ),
+        201,
+    )
+
 
 @app.errorhandler(404)
 def page_not_found(e):
