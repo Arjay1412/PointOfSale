@@ -18,13 +18,17 @@ Set up the database:
 2. Update the database details in the Flask app.
 
 In MySQL terminal in pythonanywhere execute this command
-`mysql> source myenv/MyFile/POSdb.sql`
+```cmd
+mysql> source myenv/MyFile/POSdb.sql
+```
 
 Set these directly in the code:
-`app.config["MYSQL_HOST"] = "YourPOS.mysql.pythonanywhere-services.com"`
-`app.config["MYSQL_USER"] = "YourPOS"`
-`app.config["MYSQL_PASSWORD"] = "admin"`
-`app.config["MYSQL_DB"] = "YourPOS$default"`
+```cmd
+app.config["MYSQL_HOST"] = "YourPOS.mysql.pythonanywhere-services.com"
+app.config["MYSQL_USER"] = "YourPOS"
+app.config["MYSQL_PASSWORD"] = "admin"
+app.config["MYSQL_DB"] = "YourPOS$default"
+```
 
 ## API Endpoints
 
