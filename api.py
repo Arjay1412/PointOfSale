@@ -21,7 +21,7 @@ def hello_world():
         {"body":"<p>Hello, World!</p>"}
     ), 200)
 
-@app.route("/productlist", methods=["GET"])
+@app.route("/products", methods=["GET"])
 def get_products():
     try:
         cur = mysql.connection.cursor()
@@ -40,7 +40,7 @@ def get_products():
         return make_response(jsonify({"error": str(e)}), 500)
 
 
-@app.route("/transactionlist", methods=["GET"])
+@app.route("/transactions", methods=["GET"])
 def get_transaction():
     cur = mysql.connection.cursor()
     query = """SELECT * FROM posdb.transaction"""
@@ -146,8 +146,7 @@ def add_product():
         return make_response(
             jsonify(
                 {"message": "Product added successfully", 
-                 "rows_affected": rows_affected}),
-                200,)
+                 "rows_affected": rows_affected}),201)
     except Exception as e:
         return make_response(jsonify({"error": str(e)}), 500)
 
