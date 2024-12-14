@@ -57,4 +57,33 @@ def test_update_product(client, mock_db):
     assert response.status_code == 200
     assert b"Product updated successfully" in response.data
 
-    
+def test_get_transactions(client, mock_db):
+    mock_db.fetchall.return_value = [
+        {
+            "transaction_id": 4,
+            "staff_id": 1,
+            "costumer_id": 1,
+            "product_id": 1,
+            "payment_id": 104,
+            "transaction_datetime": "2020-01-11 21:16:26",
+            "quantity": 91
+        }
+    ]
+    response = client.get("/transactions")
+    assert response.status_code == 200
+
+def test_add_transaction_payment(client, mock_db):
+    mock_db.rowcount = 1  # Mock successful insertion
+    response = client.post('/order',
+        json={
+            "method": "Shees",
+            "amount": 108.75,
+            "staff_id": 1,
+            "costumer_id": 1,
+            "product_id": 2,
+            "product_quantity": 6
+},
+    )
+    assert response.status_code == 201
+    assert b"Order added successfully" in response.data
+
