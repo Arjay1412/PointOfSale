@@ -14,7 +14,6 @@ app.config["MYSQL_CURSORCLASS"] = "DictCursor"
 
 mysql = MySQL(app)
 
-
 # Routes
 @app.route("/")
 def hello_world():
@@ -50,6 +49,7 @@ def update_product(id):
     info = request.get_json()
     price = info["price"]
     quantity = info["quantity"]
+    
     query = """ UPDATE product SET price = %s, quantity = %s WHERE product_id = %s """
     values = (price, quantity, id)
     cur.execute(query,values)
@@ -63,6 +63,7 @@ def update_product(id):
         ),
         200,
     )
+
 @app.route("/order", methods=["POST"])
 def add_payment_transaction():
     
@@ -78,56 +79,70 @@ def add_payment_transaction():
 
     cur = mysql.connection.cursor()
     # Create payment
-    payment_query = """INSERT INTO payment (method, amount) VALUES (%s, %s)"""
-    payment_values = (method, amount)
-    cur.execute(payment_query, payment_values)
-    rows_affected_payment = cur.rowcount
+    try:
+        payment_query = """INSERT INTO payment (method, amount) VALUES (%s, %s)"""
+        payment_values = (method, amount)
+        cur.execute(payment_query, payment_values)
+        rows_affected_payment = cur.rowcount
 
-    # Get last inserted payment_id
-    payment_id = cur.lastrowid
+        payment_id = cur.lastrowid
 
-    # Create transaction
-    transaction_query = """
-        INSERT INTO transaction (staff_id, costumer_id, product_id, payment_id, transaction_datetime, product_quantity) 
-        VALUES (%s, %s, %s, %s, %s, %s)
-    """
-    transaction_values = (staff_id, customer_id, prod_id, payment_id, datetime.now(), quantity)
-    cur.execute(transaction_query, transaction_values)
-    rows_affected_transaction = cur.rowcount
+        # Create transaction
+        transaction_query = """
+            INSERT INTO transaction (staff_id, costumer_id, product_id, payment_id, transaction_datetime, product_quantity) 
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """
+        transaction_values = (staff_id, customer_id, prod_id, payment_id, datetime.now(), quantity)
+        cur.execute(transaction_query, transaction_values)
+        rows_affected_transaction = cur.rowcount
 
-    mysql.connection.commit()
-    cur.close()
+        mysql.connection.commit()
+        cur.close()
 
-    return make_response(
-        jsonify(
-            {"message1": "Order added successfully", "rows_affected1": rows_affected_payment,
-             "message2": "Transaction added successfully", "rows_affected2": rows_affected_transaction}
-        ),
-        201,
-    )
+        return make_response(
+            jsonify(
+                {"message1": "Order added successfully", "rows_affected1": rows_affected_payment,
+                "message2": "Transaction added successfully", "rows_affected2": rows_affected_transaction}
+            ),
+            201,
+        )
+    except Exception as e:
+        return make_response(jsonify(
+                                {"error": str(e)}
+                                ), 500)
+
 
 @app.route("/product/<int:id>", methods=["DELETE"])
-def delete_actor(id):
-    cur = mysql.connection.cursor()
-    cur.execute(""" DELETE FROM product where product_id = %s """, (id,))
-    mysql.connection.commit()
-    rows_affected = cur.rowcount
-    cur.close()
-    return make_response(
-        jsonify(
-            {"message": "Product deleted successfully", "rows_affected": rows_affected}
-        ),
-        200,
-    )
+def delete_product(id):
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute(""" DELETE FROM product where product_id = %s """, (id,))
+        mysql.connection.commit()
+        rows_affected = cur.rowcount
+        cur.close()
+        if rows_affected == 0:
+            return make_response(
+            jsonify(
+                {"error": "Product not Found"}),200,)
+
+        return make_response(
+            jsonify(
+                {"message": "Product deleted successfully", "rows_affected": rows_affected}
+            ),
+            200,)
+    except Exception as e:
+        return make_response(jsonify(
+                                {"error": str(e)}
+                                ), 500)
 
 @app.errorhandler(404)
 def page_not_found(e):
-    data ={"error": "Page Not Found"}
+    data ={"error": str(e)}
     return make_response(jsonify(data), 404)
 
 @app.errorhandler(500)
 def page_not_found(e):
-    data ={"error": "Interal Server Error"}
+    data ={"error": str(e)}
     return make_response(jsonify(data), 500)
 
 if __name__ == "__main__":
