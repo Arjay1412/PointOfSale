@@ -1,4 +1,4 @@
-from flask import Flask, make_response, jsonify
+from flask import Flask, make_response, jsonify, request
 from flask_mysqldb import MySQL
 
 
@@ -18,7 +18,9 @@ mysql = MySQL(app)
 # Routes
 @app.route("/")
 def hello_world():
-    return "<p>Hello, World!</p>"
+    return make_response(jsonify(
+        {"body":"<p>Hello, World!</p>"}
+    ), 200)
 
 @app.route("/productlist", methods=["GET"])
 def get_products():
@@ -41,6 +43,26 @@ def get_transaction():
     cur.close()
 
     return make_response(jsonify(data), 200)
+
+@app.route("/product/<int:id>", methods=["PUT"])
+def update_product(id):
+    cur = mysql.connection.cursor()
+    info = request.get_json()
+    price = info["price"]
+    quantity = info["quantity"]
+    query = """ UPDATE product SET price = %s, quantity = %s WHERE product_id = %s """
+    values = (price, quantity, id)
+    cur.execute(query,values)
+    mysql.connection.commit()
+    rows_affected = cur.rowcount
+    cur.close()
+    return make_response(
+        jsonify(
+            {"message": "Product updated successfully",
+            "rows_affected": rows_affected}
+        ),
+        200,
+    )
 
 @app.errorhandler(404)
 def page_not_found(e):
